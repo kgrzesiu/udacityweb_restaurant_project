@@ -1,0 +1,22 @@
+#maincontent {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+#maincontent #map-container {
+    flex: 1 1 100%;
+    height: 300px;
+    order: 2;
+    position: relative;
+    right: auto;
+}
+
+#maincontent #restaurant-container {
+    flex: 1 1 100%;
+    order: 1;
+}
+
+#maincontent #reviews-container {
+    flex: 1 1 100%;
+    order: 3;
+}

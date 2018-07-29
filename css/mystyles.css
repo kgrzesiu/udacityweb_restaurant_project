@@ -1,0 +1,55 @@
+/* ====================== Recomened catch all ====================== */
+img, embed, object, video {
+    max-width: 100%;
+  }
+
+/* ====================== INDEX ====================== */
+
+/* ====================== flex ====================== */
+#restaurants-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+#restaurants-list li {
+    min-width: 270px;
+}
+
+.filter-options {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.filter-options h2{
+    display: block;
+}
+
+.filter-options select{
+    flex: 1 1 150px;
+    max-width: 200px;
+}
+
+/* ====================== RESTAURANT DETAILS ====================== */
+
+.inside #footer {
+    width: 100%;
+}
+
+#maincontent {
+    
+}
+
+#maincontent #map-container {
+
+}
+
+#maincontent #restaurant-container {
+
+}
+
+#maincontent #reviews-container {
+
+}

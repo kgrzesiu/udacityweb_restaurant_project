@@ -1,0 +1,7 @@
+.filter-options {
+    flex-wrap: nowrap;
+}
+
+.filter-options h2{
+    display: none;
+}
