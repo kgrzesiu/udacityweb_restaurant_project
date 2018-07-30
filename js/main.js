@@ -4,14 +4,31 @@ let restaurants,
 var newMap
 var markers = []
 
+
+
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
+  initServiceWorker();
   initMap(); // added 
   fetchNeighborhoods();
   fetchCuisines();
 });
+
+/**
+ * Start service worker
+ */
+initServiceWorker = () => {
+  if (!navigator.serviceWorker) return;
+  navigator.serviceWorker.register('/servicew.js',{
+    scope: '/'
+  }).then(function(){
+    console.log('Service worker registered');
+  }).catch(function(){
+    console.log('Registration of service worker failed!');
+  });
+}
 
 /**
  * Fetch all neighborhoods and set their HTML.
@@ -72,6 +89,7 @@ fillCuisinesHTML = (cuisines = self.cuisines) => {
  * Initialize leaflet map, called from HTML.
  */
 initMap = () => {
+  if (typeof L == 'undefined') return;
   self.newMap = L.map('map', {
         center: [40.722216, -73.987501],
         zoom: 12,
@@ -205,6 +223,7 @@ addMarkersToMap = (restaurants = self.restaurants) => {
   restaurants.forEach(restaurant => {
     // Add marker to the map
     const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.newMap);
+    if (typeof marker ==='undefined') return;
     marker.on("click", onClick);
     function onClick() {
       window.location.href = marker.options.url;

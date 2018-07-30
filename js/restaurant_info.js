@@ -15,7 +15,8 @@ initMap = () => {
   fetchRestaurantFromURL((error, restaurant) => {
     if (error) { // Got an error!
       console.error(error);
-    } else {      
+    } else {
+      if (typeof L === 'undefined') return;      
       self.newMap = L.map('map', {
         center: [restaurant.latlng.lat, restaurant.latlng.lng],
         zoom: 16,
@@ -86,9 +87,24 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const address = document.getElementById('restaurant-address');
   address.innerHTML = restaurant.address;
 
-  const image = document.getElementById('restaurant-img');
-  image.className = 'restaurant-img'
-  image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  const simpleImage = document.getElementById('restaurant-img');
+  // image.className = 'restaurant-img'
+  // image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  const picture =  document.createElement('picture');
+  picture.className = 'restaurant-img';
+  const media_s = document.createElement('source');
+  media_s.setAttribute('media','(max-width: 800px)');
+  media_s.setAttribute('srcset', DBHelper.imageUrlForRestaurantS(restaurant));
+  picture.appendChild(media_s);
+  const media_l = document.createElement('source');
+  media_l.setAttribute('media','(min-width: 800px)');
+  media_l.setAttribute('srcset', DBHelper.imageUrlForRestaurantL(restaurant));
+  picture.appendChild(media_l);
+  const image = document.createElement('img');
+  image.src = DBHelper.imageUrlForRestaurantS(restaurant);
+  image.alt = DBHelper.imageAltTextForRestaurant(restaurant);
+  picture.appendChild(image);
+  simpleImage.replaceWith(picture);
 
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;
