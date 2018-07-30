@@ -174,6 +174,7 @@ createRestaurantHTML = (restaurant) => {
   picture.appendChild(media_l);
   const image = document.createElement('img');
   image.src = DBHelper.imageUrlForRestaurantS(restaurant);
+  image.alt = DBHelper.imageAltTextForRestaurant(restaurant);
   picture.appendChild(image);
   li.append(picture);
 
