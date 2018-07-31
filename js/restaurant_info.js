@@ -103,6 +103,7 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const image = document.createElement('img');
   image.src = DBHelper.imageUrlForRestaurantS(restaurant);
   image.alt = DBHelper.imageAltTextForRestaurant(restaurant);
+  image.id = 'restaurant-img';
   picture.appendChild(image);
   simpleImage.replaceWith(picture);
 
