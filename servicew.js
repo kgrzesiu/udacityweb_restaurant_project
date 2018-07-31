@@ -48,6 +48,32 @@ self.addEventListener('activate', function(event){
     );
 });
 
+var WORKER_VER = 30; 
+console.log(WORKER_VER + ' Version - store');
+
+function storeRestaurantsInDB(restaurants){
+    let rclone = restaurants.clone();
+    rclone.json().then(function(resJson){
+        const db = IndexDBHelper.openDatabase();
+        for (const restaurant of resJson){
+            IndexDBHelper.saveRestaurantWithPromise(db, restaurant)
+            .then(saveRes => {
+                //console.log('Saved', saveRes);
+            });
+        }
+    });
+    return restaurants;
+}
+
+function returnRestaurantsFromDB(err){
+    return IndexDBHelper.getAllRestaurants().then(res => {
+        //got all restaurants return them from database
+        return new Response(JSON.stringify(res), {
+            headers: {'Content-Type': 'application/json'}
+        });
+    });
+}
+
 self.addEventListener('fetch', function(event){
     var requestUrl = new URL(event.request.url);
 
@@ -60,32 +86,12 @@ self.addEventListener('fetch', function(event){
 
     //write json to db
     if (requestUrl.pathname == '/restaurants') {
-        fetch(event.request.url).then(function(res){
-            
-            console.log('Res is then',res);
-
-            let rclone = res.clone();
-            rclone.json().then(function(resJson){
-
-                console.log('7 Fetch version');
-
-                const db = IndexDBHelper.openDatabase();
-                for (const restaurant of resJson){
-                    IndexDBHelper.saveRestaurantWithPromise(db, restaurant)
-                    .then(saveRes => {
-                        //console.log('Saved', saveRes);
-                    });
-                }
-            });
-            event.respondWith(res);
-        }).catch(err => {
-            console.log('Request error?');
-            IndexDBHelper.getAllRestaurants().then(res => {
-                //got all restaurants return them from database
-                console.log('Got localy restaurants', res);
-                event.respondWith(res);
-            });
-        })
+        event.respondWith(
+            fetch(event.request.url)
+            .then(storeRestaurantsInDB)
+            .catch(returnRestaurantsFromDB)
+        );
+        return;
     }
 
     // event.respondWith(
