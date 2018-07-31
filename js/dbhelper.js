@@ -65,7 +65,6 @@ class DBHelper {
         if (neighborhood != 'all') { // filter by neighborhood
           results = results.filter(r => r.neighborhood == neighborhood);
         }
-        console.log('Result from restaurants',results);
         return results;
     });
   }

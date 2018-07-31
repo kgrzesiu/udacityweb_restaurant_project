@@ -1,5 +1,3 @@
-//import idb from 'idb';
-
 const DB_NAME = 'stage2db';
 const RESTAURANTS = 'restaurants';
 const CUISINE_INDEX = 'cuisine';
@@ -73,7 +71,7 @@ dbPromise.then(function(db){
 
       return tx.complete;
 }).then(function(){
-    console.log('added');
+    //console.log('Object added to db store');
 });
 
 //read
