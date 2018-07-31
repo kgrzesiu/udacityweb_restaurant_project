@@ -39,6 +39,15 @@ class IndexDBHelper {
     });
   }
 
+  static getRestaurantById(id) {
+    var dbPromise = IndexDBHelper.openDatabase();
+    return dbPromise.then(function(db){
+        return db.transaction(IndexDBHelper.RESTAURANTS,'readonly')
+        .objectStore(IndexDBHelper.RESTAURANTS)
+        .get(id);
+    });
+  }
+
   static saveRestaurantWithPromise(dbPromise, restaurant) {
     return dbPromise.then(function(db){
         return db.transaction(IndexDBHelper.RESTAURANTS,'readwrite')
@@ -47,7 +56,7 @@ class IndexDBHelper {
     });
   }
 
-  static getRestaurantWithPromise(dbPromise, id) {
+  static getRestaurantByIdWithPromise(dbPromise, id) {
     return dbPromise.then(function(db){
         return db.transaction(IndexDBHelper.RESTAURANTS,'readonly')
         .objectStore(IndexDBHelper.RESTAURANTS)

@@ -11,19 +11,21 @@ var allCaches = [
 self.addEventListener('install', function(event){
 
     var urlsToCache = [
-        // '/',
-        // '/restaurant.html',
-        // '/js/dbhelper.js',
-        // '/js/main.js',
-        // '/js/restaurant_info.js',
-        // '/js/token.js',
-        // '/img',
-        // '/css/mystyles.css',
-        // '/css/restaurantdetailsto800.css',
-        // '/css/size500to800.css',
-        // '/css/sizefrom800.css',
-        // '/css/sizeto500.css',
-        // '/css/styles.css',
+        '/',
+        '/restaurant.html',
+        '/js/dbhelper.js',
+        '/js/indexdbhelper.js',
+        '/js/main.js',
+        '/js/restaurant_info.js',
+        '/js/token.js',
+        '/js/libs/idb.js',
+        '/img',
+        '/css/mystyles.css',
+        '/css/restaurantdetailsto800.css',
+        '/css/size500to800.css',
+        '/css/sizefrom800.css',
+        '/css/sizeto500.css',
+        '/css/styles.css',
     ];
 
     event.waitUntil(
@@ -48,8 +50,7 @@ self.addEventListener('activate', function(event){
     );
 });
 
-var WORKER_VER = 30; 
-console.log(WORKER_VER + ' Version - store');
+
 
 function storeRestaurantsInDB(restaurants){
     let rclone = restaurants.clone();
@@ -84,7 +85,8 @@ self.addEventListener('fetch', function(event){
         return;
     }
 
-    //write json to db
+    //all restaurants
+    //http://localhost:1337/restaurants
     if (requestUrl.pathname == '/restaurants') {
         event.respondWith(
             fetch(event.request.url)
@@ -93,6 +95,34 @@ self.addEventListener('fetch', function(event){
         );
         return;
     }
+
+    // var WORKER_VER = 36;
+    // console.log(WORKER_VER + ' Version - store');
+
+    //single restaurant
+    //http://localhost:1337/restaurants/1
+    if (requestUrl.pathname.startsWith('/restaurants/')) {
+        var id = +requestUrl.pathname.split('/')[2];
+        
+        event.respondWith(
+            fetch(event.request.url)
+            .then(res => { 
+                console.log('Fetching remote restaurant');
+                return res;
+            })
+            .catch(err =>{
+                console.log('Fetching rest from database with id',id);
+                return IndexDBHelper.getRestaurantById(id).then(res => {
+                    //got one restaurant from database
+                    return new Response(JSON.stringify(res), {
+                        headers: {'Content-Type': 'application/json'}
+                    });
+                });
+            })
+        );
+        return;
+    }
+
 
     // event.respondWith(
     //     caches.match(event.request).then(function(response){
