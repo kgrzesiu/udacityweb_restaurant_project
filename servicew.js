@@ -1,4 +1,6 @@
-var staticCacheName = 'site-static-15';
+importScripts('/js/indexdbhelper.js');
+
+var staticCacheName = 'site-static-18';
 var contentImgsCache = 'site-imgs-2';
 var allCaches = [
   staticCacheName,
@@ -8,20 +10,19 @@ var allCaches = [
 self.addEventListener('install', function(event){
 
     var urlsToCache = [
-        '/',
-        '/restaurant.html',
-        '/js/dbhelper.js',
-        '/js/main.js',
-        '/js/restaurant_info.js',
-        '/js/token.js',
-        '/img',
-        '/data/restaurants.json',
-        '/css/mystyles.css',
-        '/css/restaurantdetailsto800.css',
-        '/css/size500to800.css',
-        '/css/sizefrom800.css',
-        '/css/sizeto500.css',
-        '/css/styles.css',
+        // '/',
+        // '/restaurant.html',
+        // '/js/dbhelper.js',
+        // '/js/main.js',
+        // '/js/restaurant_info.js',
+        // '/js/token.js',
+        // '/img',
+        // '/css/mystyles.css',
+        // '/css/restaurantdetailsto800.css',
+        // '/css/size500to800.css',
+        // '/css/sizefrom800.css',
+        // '/css/sizeto500.css',
+        // '/css/styles.css',
     ];
 
     event.waitUntil(
@@ -49,13 +50,24 @@ self.addEventListener('activate', function(event){
 self.addEventListener('fetch', function(event){
     var requestUrl = new URL(event.request.url);
 
-    //console.log('Fetch '+ event.request.url);
+    //console.log(requestUrl.pathname,'Fetch '+ event.request.url);
 
-    if (requestUrl.origin === location.origin) {
-        if (requestUrl.pathname.startsWith('/img/')) {
-          event.respondWith(servePhoto(event.request));
-          return;
-        }
+    if (requestUrl.pathname.startsWith('/img/')) {
+        event.respondWith(servePhoto(event.request));
+        return;
+    }
+
+    //write json to db
+    if (requestUrl.pathname == '/restaurants') {
+        return fetch(event.request.url).then(function(res){
+            let rclone = res.clone();
+            rclone.json().then(function(res){
+                //json
+                console.log('1 Inside worker: ',res);
+                IndexDBHelper.openDatabase();
+            });
+            return res;
+        })
     }
 
     // event.respondWith(
