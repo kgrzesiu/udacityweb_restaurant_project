@@ -1,8 +1,8 @@
 importScripts('/js/indexdbhelper.js');
 importScripts('/js/libs/idb.js');
 
-var staticCacheName = 'site-static-18';
-var contentImgsCache = 'site-imgs-2';
+var staticCacheName = 'site-static-20';
+var contentImgsCache = 'site-imgs-3';
 var allCaches = [
   staticCacheName,
   contentImgsCache
