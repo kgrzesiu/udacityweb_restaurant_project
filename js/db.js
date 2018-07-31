@@ -82,7 +82,7 @@ dbPromise.then(function(db){
     var restaurantsStore = tx.objectStore(RESTAURANTS);
     return restaurantsStore.getAll();
 }).then(function(restaurants){
-    console.log(restaurants);
+    //console.log(restaurants);
 });
 
 //read index
@@ -92,7 +92,7 @@ dbPromise.then(function(db){
     var cuisine = restaurantsStore.index(CUISINE_INDEX);
     return cuisine.getAll('Asiand');
 }).then(function(restaurants){
-    console.log(restaurants);
+    //console.log(restaurants);
 });
 
 
