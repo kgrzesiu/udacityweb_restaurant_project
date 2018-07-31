@@ -1,4 +1,5 @@
 importScripts('/js/indexdbhelper.js');
+importScripts('/js/libs/idb.js');
 
 var staticCacheName = 'site-static-18';
 var contentImgsCache = 'site-imgs-2';
@@ -63,8 +64,9 @@ self.addEventListener('fetch', function(event){
             let rclone = res.clone();
             rclone.json().then(function(res){
                 //json
-                console.log('1 Inside worker: ',res);
-                IndexDBHelper.openDatabase();
+                console.log('4 Inside worker: ',res);
+                //works
+                
             });
             return res;
         })
