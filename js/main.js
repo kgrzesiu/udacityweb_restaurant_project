@@ -11,13 +11,18 @@ var markers = []
  */
 document.addEventListener('DOMContentLoaded', (event) => {
 
-  //read all
-  // IndexDBHelper.getAllRestaurants()
-  // .then(function(res){
-  //     console.log('Res; ',res);
-  // });
-  var db = IndexDBHelper.openDatabase();
+  
 
+  //Working reading and saving
+  /* 
+  //read all
+  IndexDBHelper.getAllRestaurants()
+  .then(function(res){
+      console.log('Res; ',res);
+  });
+ 
+
+   var db = IndexDBHelper.openDatabase();
   IndexDBHelper.saveRestaurantWithPromise(db, {
     "name": "Mission Chinese Food",
     "neighborhood": "Manhattan",
@@ -68,12 +73,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
   IndexDBHelper.getRestaurantWithPromise(db, 1)
   .then(res => {
     console.log('Restaurant get', res);
-  });
+  }); */
 
-  // initServiceWorker();
-  // initMap(); // added 
-  // fetchNeighborhoods();
-  // fetchCuisines();
+  initServiceWorker();
+  initMap(); // added 
+  fetchNeighborhoods();
+  fetchCuisines();
 });
 
 /**

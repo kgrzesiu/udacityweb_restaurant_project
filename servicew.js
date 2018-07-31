@@ -60,15 +60,31 @@ self.addEventListener('fetch', function(event){
 
     //write json to db
     if (requestUrl.pathname == '/restaurants') {
-        return fetch(event.request.url).then(function(res){
+        fetch(event.request.url).then(function(res){
+            
+            console.log('Res is then',res);
+
             let rclone = res.clone();
-            rclone.json().then(function(res){
-                //json
-                console.log('4 Inside worker: ',res);
-                //works
-                
+            rclone.json().then(function(resJson){
+
+                console.log('7 Fetch version');
+
+                const db = IndexDBHelper.openDatabase();
+                for (const restaurant of resJson){
+                    IndexDBHelper.saveRestaurantWithPromise(db, restaurant)
+                    .then(saveRes => {
+                        //console.log('Saved', saveRes);
+                    });
+                }
             });
-            return res;
+            event.respondWith(res);
+        }).catch(err => {
+            console.log('Request error?');
+            IndexDBHelper.getAllRestaurants().then(res => {
+                //got all restaurants return them from database
+                console.log('Got localy restaurants', res);
+                event.respondWith(res);
+            });
         })
     }
 
