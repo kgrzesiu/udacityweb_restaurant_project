@@ -34,13 +34,10 @@ initServiceWorker = () => {
  * Fetch all neighborhoods and set their HTML.
  */
 fetchNeighborhoods = () => {
-  DBHelper.fetchNeighborhoods((error, neighborhoods) => {
-    if (error) { // Got an error
-      console.error(error);
-    } else {
-      self.neighborhoods = neighborhoods;
-      fillNeighborhoodsHTML();
-    }
+  DBHelper.fetchNeighborhoods()
+  .then(res => {
+    self.neighborhoods = res;
+    fillNeighborhoodsHTML();
   });
 }
 
@@ -61,13 +58,10 @@ fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
  * Fetch all cuisines and set their HTML.
  */
 fetchCuisines = () => {
-  DBHelper.fetchCuisines((error, cuisines) => {
-    if (error) { // Got an error!
-      console.error(error);
-    } else {
-      self.cuisines = cuisines;
-      fillCuisinesHTML();
-    }
+  DBHelper.fetchCuisines()
+  .then(res => {
+    self.cuisines = res;
+    fillCuisinesHTML();
   });
 }
 
@@ -106,18 +100,6 @@ initMap = () => {
 
   updateRestaurants();
 }
-/* window.initMap = () => {
-  let loc = {
-    lat: 40.722216,
-    lng: -73.987501
-  };
-  self.map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 12,
-    center: loc,
-    scrollwheel: false
-  });
-  updateRestaurants();
-} */
 
 /**
  * Update page and map for current restaurants.
@@ -132,13 +114,10 @@ updateRestaurants = () => {
   const cuisine = cSelect[cIndex].value;
   const neighborhood = nSelect[nIndex].value;
 
-  DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
-    if (error) { // Got an error!
-      console.error(error);
-    } else {
-      resetRestaurants(restaurants);
-      fillRestaurantsHTML();
-    }
+  DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood)
+  .then(res => {
+    resetRestaurants(res);
+    fillRestaurantsHTML();
   })
 }
 
@@ -232,14 +211,4 @@ addMarkersToMap = (restaurants = self.restaurants) => {
   });
 
 } 
-/* addMarkersToMap = (restaurants = self.restaurants) => {
-  restaurants.forEach(restaurant => {
-    // Add marker to the map
-    const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);
-    google.maps.event.addListener(marker, 'click', () => {
-      window.location.href = marker.url
-    });
-    self.markers.push(marker);
-  });
-} */
 
