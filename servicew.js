@@ -1,5 +1,8 @@
-var staticCacheName = 'site-static-15';
-var contentImgsCache = 'site-imgs-2';
+importScripts('/js/indexdbhelper.js');
+importScripts('/js/libs/idb.js');
+
+var staticCacheName = 'site-static-20';
+var contentImgsCache = 'site-imgs-3';
 var allCaches = [
   staticCacheName,
   contentImgsCache
@@ -11,11 +14,12 @@ self.addEventListener('install', function(event){
         '/',
         '/restaurant.html',
         '/js/dbhelper.js',
+        '/js/indexdbhelper.js',
         '/js/main.js',
         '/js/restaurant_info.js',
         '/js/token.js',
+        '/js/libs/idb.js',
         '/img',
-        '/data/restaurants.json',
         '/css/mystyles.css',
         '/css/restaurantdetailsto800.css',
         '/css/size500to800.css',
@@ -46,17 +50,79 @@ self.addEventListener('activate', function(event){
     );
 });
 
+
+
+function storeRestaurantsInDB(restaurants){
+    let rclone = restaurants.clone();
+    rclone.json().then(function(resJson){
+        const db = IndexDBHelper.openDatabase();
+        for (const restaurant of resJson){
+            IndexDBHelper.saveRestaurantWithPromise(db, restaurant)
+            .then(saveRes => {
+                //console.log('Saved', saveRes);
+            });
+        }
+    });
+    return restaurants;
+}
+
+function returnRestaurantsFromDB(err){
+    return IndexDBHelper.getAllRestaurants().then(res => {
+        //got all restaurants return them from database
+        return new Response(JSON.stringify(res), {
+            headers: {'Content-Type': 'application/json'}
+        });
+    });
+}
+
 self.addEventListener('fetch', function(event){
     var requestUrl = new URL(event.request.url);
 
-    //console.log('Fetch '+ event.request.url);
+    //console.log(requestUrl.pathname,'Fetch '+ event.request.url);
 
-    if (requestUrl.origin === location.origin) {
-        if (requestUrl.pathname.startsWith('/img/')) {
-          event.respondWith(servePhoto(event.request));
-          return;
-        }
+    if (requestUrl.pathname.startsWith('/img/')) {
+        event.respondWith(servePhoto(event.request));
+        return;
     }
+
+    //all restaurants
+    //http://localhost:1337/restaurants
+    if (requestUrl.pathname == '/restaurants') {
+        event.respondWith(
+            fetch(event.request.url)
+            .then(storeRestaurantsInDB)
+            .catch(returnRestaurantsFromDB)
+        );
+        return;
+    }
+
+    // var WORKER_VER = 36;
+    // console.log(WORKER_VER + ' Version - store');
+
+    //single restaurant
+    //http://localhost:1337/restaurants/1
+    if (requestUrl.pathname.startsWith('/restaurants/')) {
+        var id = +requestUrl.pathname.split('/')[2];
+        
+        event.respondWith(
+            fetch(event.request.url)
+            .then(res => { 
+                console.log('Fetching remote restaurant');
+                return res;
+            })
+            .catch(err =>{
+                console.log('Fetching rest from database with id',id);
+                return IndexDBHelper.getRestaurantById(id).then(res => {
+                    //got one restaurant from database
+                    return new Response(JSON.stringify(res), {
+                        headers: {'Content-Type': 'application/json'}
+                    });
+                });
+            })
+        );
+        return;
+    }
+
 
     // event.respondWith(
     //     caches.match(event.request).then(function(response){
