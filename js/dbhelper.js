@@ -3,6 +3,9 @@
  */
 class DBHelper {
 
+  static get port(){
+    return 1337;
+  }
   /**
    * Database URL.
    * Change this to restaurants.json file location on your server.
@@ -10,15 +13,16 @@ class DBHelper {
   static get DATABASE_URL() {
     // const port = 8000 // Change this to your server port
     // return `http://localhost:${port}/data/restaurants.json`;
-    const port = 1337
-    return `http://localhost:${port}/restaurants`;
+    return `http://localhost:${DBHelper.port}/restaurants`;
   }
 
   static DATABASE_URL_ID(id) {
-    const port = 1337
-    return `http://localhost:${port}/restaurants/${id}`;
+    return `http://localhost:${DBHelper.port}/restaurants/${id}`;
   }
 
+  static REVIEWS_URL_RESTAURANT_ID(id){
+    return ` http://localhost:${DBHelper.port}/reviews/?restaurant_id=${id}`
+  }
   /**
    * Fetch all restaurants.
    */
@@ -104,6 +108,20 @@ class DBHelper {
           const uniqueCuisines = cuisines.filter((v, i) => cuisines.indexOf(v) == i)
           return uniqueCuisines;
         });
+      }
+    }).catch(function(err){
+      console.log('Fetch error', err);
+    });
+  }
+
+  /**
+   * Fetch all reviews
+   */
+  static fetchReviewsByRestaurantId(id) {
+    return fetch(DBHelper.REVIEWS_URL_RESTAURANT_ID(id))
+    .then( response => {
+      if (response.ok){
+        return response.json()
       }
     }).catch(function(err){
       console.log('Fetch error', err);
