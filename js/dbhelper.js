@@ -135,6 +135,9 @@ class DBHelper {
    * Restaurant image URL Large.
    */
   static imageUrlForRestaurantL(restaurant) {
+    if (restaurant.photograph === undefined){
+      return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    }
     return (`/img/800_${restaurant.photograph}.jpg`);
   }
 
@@ -142,6 +145,9 @@ class DBHelper {
    * Restaurant image URL Small.
    */
   static imageUrlForRestaurantS(restaurant) {
+    if (restaurant.photograph === undefined){
+      return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    }
     return (`/img/400_${restaurant.photograph}.jpg`);
   }
 

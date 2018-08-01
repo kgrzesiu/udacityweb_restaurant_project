@@ -399,39 +399,39 @@ IndexDBHelper.NEIGHBORHOOD_PROP = 'neighborhood';
 // self.importScripts('/js/indexdbhelper.js');
 // self.importScripts('/js/libs/idb.js');
 
-var staticCacheName = 'site-static-20';
-var contentImgsCache = 'site-imgs-3';
+
+var WORKER_VER = 53;
+var staticCacheName = 'site-static-'+WORKER_VER;
+var contentImgsCache = 'site-imgs-'+WORKER_VER;
 var allCaches = [
   staticCacheName,
   contentImgsCache
 ];
 
 self.addEventListener('install', function(event){
-
-    var WORKER_VER = 41;
+    
     console.log(' Install Version - store', WORKER_VER);
 
     var urlsToCache = [
-        // '/',
-        // '/restaurant.html',
-        // '/js/dbhelper.js',
-        // '/js/indexdbhelper.js',
-        // '/js/main.js',
-        // '/js/restaurant_info.js',
-        // '/js/token.js',
-        // '/js/libs/idb.js',
-        // '/img',
-        // '/css/mystyles.css',
-        // '/css/restaurantdetailsto800.css',
-        // '/css/size500to800.css',
-        // '/css/sizefrom800.css',
-        // '/css/sizeto500.css',
-        // '/css/styles.css'
+        '/',
+        '/restaurant.html',
+        '/js/dbhelper.js',
+        '/js/main.js',
+        '/js/restaurant_info.js',
+        '/js/token.js',
+        '/css/mystyles.css',
+        '/css/restaurantdetailsto900.css',
+        '/css/size500to800.css',
+        '/css/sizefrom800.css',
+        '/css/sizeto500.css',
+        '/css/styles.css'
     ];
 
     event.waitUntil(
         caches.open(staticCacheName).then(function(cache){
             return cache.addAll(urlsToCache);
+        }).catch(function(err){
+          console.log('Cache request failed',err);
         })
     );
 })
@@ -537,8 +537,12 @@ self.addEventListener('fetch', function(event){
             return response || fetch(event.request).then(function(response) {
               cache.put(event.request, response.clone());
               return response;
+            }).catch(function(err){
+              console.log('Fetch request failed',err, event.request.url);
             });
           });
+        }).catch(function(err){
+          console.log('Failed to open the chache',staticCacheName);
         })
     );
 })
