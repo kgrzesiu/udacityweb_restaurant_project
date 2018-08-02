@@ -78,6 +78,7 @@ fetchRestaurantFromURL = (callback) => {
  * Create restaurant HTML and add it to the webpage
  */
 fillRestaurantHTML = (restaurant = self.restaurant) => {
+  console.log('Restaurant',restaurant);
   const name = document.getElementById('restaurant-name');
   name.innerHTML = restaurant.name;
 
@@ -177,16 +178,19 @@ fillReviewsHTML = (reviews) => {
 createFormHTML = (id) => {
   const form = document.createElement('form');
   form.className = 'commentsform';
-  form.action = 'http://localhost:1337/reviews/';
-  form.method = 'post';
+  //cannot make it with action
+  // form.action = 'http://localhost:1337/reviews/';
+  //form.action = 'http://localhost:8000/reviews/';
+  form.action = "#";
+  form.method = 'get';
   form.innerHTML = `
-  <input id="restaurantId" name="restaurantId" type="hidden" value="${id}">
+  <input id="restaurant_id" name="restaurant_id" type="hidden" value="${id}">
   <label>Name:
-    <input type="text" name="name">
+    <input required id="review_name" name="review_name" type="text"  aria-label="User name">
   </label>
   <br>
   <label>Rating:
-    <select name="rating">
+    <select required id="review_rating" name="review_rating" role="menu" aria-label="Select rating">
       <option value="1">1</option>
       <option value="2">2</option>
       <option value="3">3</option>
@@ -195,12 +199,25 @@ createFormHTML = (id) => {
     </select>
   </label>
   <label>Comments:
-    <textarea name="comments" rows="10" cols="30">
+    <textarea id="review_comments" name="review_comments" rows="10" cols="40" aria-label="Review text">
     </textarea>
   </label>
   <br>
-  <button type=submit>Submit!</button>`;
+  <button type="button" onclick="submitUserForm()" aria-label="Submit review">Submit!</button>`;
   return form;
+}
+
+/**
+ * Create review HTML and add it to the webpage.
+ */
+submitUserForm = () => {
+  const postData = {
+    "restaurant_id": self.restaurant.id,
+    "name": document.getElementById("review_name").value,
+    "rating": document.getElementById("review_rating").value,
+    "comments": document.getElementById("review_comments").value
+  };
+  console.log('submit:',postData);
 }
 
 /**

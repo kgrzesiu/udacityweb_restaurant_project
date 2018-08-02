@@ -400,7 +400,7 @@ IndexDBHelper.NEIGHBORHOOD_PROP = 'neighborhood';
 // self.importScripts('/js/libs/idb.js');
 
 
-var WORKER_VER = 54;
+var WORKER_VER = 62;
 var staticCacheName = 'site-static-'+WORKER_VER;
 var contentImgsCache = 'site-static-imgs-'+WORKER_VER;
 var allCaches = [
@@ -477,9 +477,20 @@ function returnRestaurantsFromDB(err){
 }
 
 self.addEventListener('fetch', function(event){
-    var requestUrl = new URL(event.request.url);
+    var req = event.request.clone();
+    var requestUrl = new URL(req.url);
 
-    //console.log(requestUrl.pathname,'Fetch '+ event.request.url);
+    // console.log(requestUrl.pathname,'Fetch ',req);
+
+    //cannot catch review and get all params?
+    //http://localhost:8000/reviews/?restaurant_id=1&name=greg7&rating=5&comments=++++greg7
+    // if(requestUrl.pathname.startsWith('/reviews/')) {
+    //   let params = requestUrl.searchParams;
+    //   console.log('Logging the post request',req);
+    //   console.log('Params',params);
+    //   debugger;
+    //   return;
+    //  }
 
     if (requestUrl.pathname.startsWith('/img/')) {
         event.respondWith(servePhoto(event.request));
@@ -520,13 +531,6 @@ self.addEventListener('fetch', function(event){
         );
         return;
     }
-
-    //review
-    if(requestUrl.pathname === '/reviews/' && event.request.method === 'post'){
-        console.log('Logging the post request');
-        debugger;
-    }
-
 
     // event.respondWith(
     //     caches.match(event.request).then(function(response){
