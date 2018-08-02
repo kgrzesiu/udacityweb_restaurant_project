@@ -38,11 +38,28 @@ class DBHelper {
     }
   }
 
+  static LOCAL_STORAGE_REF(){
+    return 'deferedReviewLocalStorage';
+  }
+
   /* ---------------------------- Reviews ---------------------------------*/
   /**
    * Save review
    */
   static saveReview(review) {
+    //if online 
+    if(navigator.onLine) {
+      DBHelper.saveOnlineReview(review);
+    } else {
+      //we are not online
+      DBHelper.offlineSaveReview(review);
+    }
+  }
+
+  /**
+   * Save review online
+   */
+  static saveOnlineReview(review) {
     const options = DBHelper.returnFetchPostOption(review);
     console.log('Options',options);
     return fetch(DBHelper.REVIEWS_URL_SAVE(), options)
@@ -53,6 +70,35 @@ class DBHelper {
     }).catch(function(err){
       console.error('Save review error', review, err);
     });
+  }
+  /**
+   * Save review offline
+   */
+  static offlineSaveReview(review) {
+    //save array of reviews if we are offline
+    var deferedItems = localStorage.getItem(DBHelper.LOCAL_STORAGE_REF());
+    if (deferedItems === null){
+      deferedItems = [];
+    } else {
+      deferedItems = JSON.parse(deferedItems);
+    }
+    deferedItems.push(JSON.stringify(review));
+    localStorage.setItem(DBHelper.LOCAL_STORAGE_REF(), JSON.stringify(deferedItems) );
+
+    //listen to online state, and try to save 
+    window.addEventListener('online', ()=>{
+      //get local storage
+      var deferedItems = localStorage.getItem(DBHelper.LOCAL_STORAGE_REF());
+      if (deferedItems !== null){
+        deferedItems = JSON.parse(deferedItems);
+        debugger;
+        for (var item of deferedItems){
+          DBHelper.saveOnlineReview(JSON.parse(item));
+        }
+      }
+
+      localStorage.removeItem(DBHelper.LOCAL_STORAGE_REF());
+    })
   }
 
   /* ---------------------------- Restaurants ---------------------------------*/
