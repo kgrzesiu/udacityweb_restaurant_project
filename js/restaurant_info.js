@@ -152,9 +152,11 @@ fillReviewsHTML = (reviews) => {
   container.appendChild(title);
 
   if (!reviews) {
+  // if (true) {
     const noReviews = document.createElement('p');
     noReviews.innerHTML = 'No reviews yet!';
     container.appendChild(noReviews);
+    container.appendChild(createFormHTML(self.restaurant.id));
     return;
   }
   const ul = document.getElementById('reviews-list');
@@ -163,7 +165,8 @@ fillReviewsHTML = (reviews) => {
   });
 
   //append form
-  ul.appendChild(createFormHTML(self.restaurant.id));
+  ul.appendChild(document.createElement('li')
+                .appendChild(createFormHTML(self.restaurant.id)));
 
   container.appendChild(ul);
 }
@@ -172,8 +175,11 @@ fillReviewsHTML = (reviews) => {
  * Create review HTML and add it to the webpage.
  */
 createFormHTML = (id) => {
-  const li = document.createElement('li');
-  li.innerHTML = `<form class='commentsform' action="http://localhost:8000/" method="GET">
+  const form = document.createElement('form');
+  form.className = 'commentsform';
+  form.action = 'http://localhost:8000/';
+  form.method = 'GET';
+  form.innerHTML = `
   <input id="restaurantId" name="restaurantId" type="hidden" value="${id}">
   <label>Name:
     <input type="text" name="name">
@@ -194,7 +200,7 @@ createFormHTML = (id) => {
   </label>
   <br>
   <button type=submit>Submit!</button>`;
-  return li;
+  return form;
 }
 
 /**
@@ -207,7 +213,8 @@ createReviewHTML = (review) => {
   li.appendChild(name);
 
   const date = document.createElement('p');
-  date.innerHTML = review.date;
+  var dateValue = new Date(review.createdAt).toLocaleString();
+  date.innerHTML = dateValue;
   li.appendChild(date);
 
   const rating = document.createElement('p');
