@@ -111,8 +111,15 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   if (restaurant.operating_hours) {
     fillRestaurantHoursHTML();
   }
-  // fill reviews
-  fillReviewsHTML();
+  // fetch & fill reviews
+  DBHelper.fetchReviewsByRestaurantId(restaurant.id)
+  .then(res =>{
+    fillReviewsHTML(res);
+  })
+  .catch(err =>{
+    console.log('Failed to fetch reviews by id', restaurant.id);
+  });
+  
 }
 
 /**
@@ -138,7 +145,7 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
 /**
  * Create all reviews HTML and add them to the webpage.
  */
-fillReviewsHTML = (reviews = self.restaurant.reviews) => {
+fillReviewsHTML = (reviews) => {
   const container = document.getElementById('reviews-container');
   const title = document.createElement('h2');
   title.innerHTML = 'Reviews';
@@ -154,7 +161,40 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   reviews.forEach(review => {
     ul.appendChild(createReviewHTML(review));
   });
+
+  //append form
+  ul.appendChild(createFormHTML(self.restaurant.id));
+
   container.appendChild(ul);
+}
+
+/**
+ * Create review HTML and add it to the webpage.
+ */
+createFormHTML = (id) => {
+  const li = document.createElement('li');
+  li.innerHTML = `<form class='commentsform' action="http://localhost:8000/" method="GET">
+  <input id="restaurantId" name="restaurantId" type="hidden" value="${id}">
+  <label>Name:
+    <input type="text" name="name">
+  </label>
+  <br>
+  <label>Rating:
+    <select name="rating">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5" selected>5</option>
+    </select>
+  </label>
+  <label>Comments:
+    <textarea name="comments" rows="10" cols="30">
+    </textarea>
+  </label>
+  <br>
+  <button type=submit>Submit!</button>`;
+  return li;
 }
 
 /**
