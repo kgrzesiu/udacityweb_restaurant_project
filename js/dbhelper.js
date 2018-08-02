@@ -23,6 +23,37 @@ class DBHelper {
   static REVIEWS_URL_RESTAURANT_ID(id){
     return ` http://localhost:${DBHelper.port}/reviews/?restaurant_id=${id}`
   }
+
+  static REVIEWS_URL_SAVE(){
+    return ` http://localhost:${DBHelper.port}/reviews/`
+  }
+
+  static returnFetchPostOption(data){
+    return {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }
+  }
+
+  /* ---------------------------- Reviews ---------------------------------*/
+  /**
+   * Save review
+   */
+  static saveReview(review) {
+    return fetch(DBHelper.REVIEWS_URL_SAVE, DBHelper.returnFetchPostOption(review))
+    .then( response => {
+      if (response.ok){
+        return response.json();
+      }
+    }).catch(function(err){
+      console.error('Save review error', review, err);
+    });
+  }
+
+  /* ---------------------------- Restaurants ---------------------------------*/
   /**
    * Fetch all restaurants.
    */
@@ -118,6 +149,7 @@ class DBHelper {
    * Fetch all reviews
    */
   static fetchReviewsByRestaurantId(id) {
+    console.log('Fetch reviews by rest id:',id);
     return fetch(DBHelper.REVIEWS_URL_RESTAURANT_ID(id))
     .then( response => {
       if (response.ok){

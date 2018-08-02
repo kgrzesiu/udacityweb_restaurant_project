@@ -203,21 +203,29 @@ createFormHTML = (id) => {
     </textarea>
   </label>
   <br>
-  <button type="button" onclick="submitUserForm()" aria-label="Submit review">Submit!</button>`;
+  <button type=submit onclick="submitUserForm(event)" aria-label="Submit review">Submit!</button>`;
   return form;
 }
 
 /**
  * Create review HTML and add it to the webpage.
  */
-submitUserForm = () => {
-  const postData = {
+submitUserForm = (event) => {
+  event.preventDefault();
+  const review = {
     "restaurant_id": self.restaurant.id,
     "name": document.getElementById("review_name").value,
     "rating": document.getElementById("review_rating").value,
     "comments": document.getElementById("review_comments").value
   };
-  console.log('submit:',postData);
+  DBHelper.saveReview(review);
+}
+
+/**
+ * Add review to the website
+ */
+displayReview = (review) => {
+
 }
 
 /**
