@@ -152,18 +152,19 @@ fillReviewsHTML = (reviews) => {
   title.innerHTML = 'Reviews';
   container.appendChild(title);
 
-  if (!reviews) {
-  // if (true) {
-    const noReviews = document.createElement('p');
-    noReviews.innerHTML = 'No reviews yet!';
-    container.appendChild(noReviews);
-    container.appendChild(createFormHTML(self.restaurant.id));
-    return;
-  }
+  // if (!reviews) {
+  //   const noReviews = document.createElement('p');
+  //   noReviews.innerHTML = 'No reviews yet!';
+  //   container.appendChild(noReviews);
+  //   container.appendChild(createFormHTML(self.restaurant.id));
+  //   return;
+  // }
   const ul = document.getElementById('reviews-list');
-  reviews.forEach(review => {
-    ul.appendChild(createReviewHTML(review));
-  });
+  if (reviews){
+    reviews.forEach(review => {
+      ul.appendChild(createReviewHTML(review));
+    });
+  }
 
   //append form
   ul.appendChild(document.createElement('li')
@@ -183,6 +184,7 @@ createFormHTML = (id) => {
   //form.action = 'http://localhost:8000/reviews/';
   form.action = "#";
   form.method = 'get';
+  form.id = 'reviews-submit-form';
   form.innerHTML = `
   <input id="restaurant_id" name="restaurant_id" type="hidden" value="${id}">
   <label>Name:
@@ -216,16 +218,26 @@ submitUserForm = (event) => {
     "restaurant_id": self.restaurant.id,
     "name": document.getElementById("review_name").value,
     "rating": document.getElementById("review_rating").value,
-    "comments": document.getElementById("review_comments").value
+    "comments": document.getElementById("review_comments").value,
+    "createdAt": Date.now(),
+    "updatedAt": Date.now()
   };
+  //send review to database
   DBHelper.saveReview(review);
+
+  //display review right away
+  displayReview(review);
 }
 
 /**
  * Add review to the website
  */
 displayReview = (review) => {
-
+  const ul = document.getElementById('reviews-list');
+  ul.appendChild(createReviewHTML(review));
+  const form = document.getElementById('reviews-submit-form');
+  form.reset();
+  ul.appendChild(form);
 }
 
 /**
