@@ -400,9 +400,9 @@ IndexDBHelper.NEIGHBORHOOD_PROP = 'neighborhood';
 // self.importScripts('/js/libs/idb.js');
 
 
-var WORKER_VER = 53;
+var WORKER_VER = 54;
 var staticCacheName = 'site-static-'+WORKER_VER;
-var contentImgsCache = 'site-imgs-'+WORKER_VER;
+var contentImgsCache = 'site-static-imgs-'+WORKER_VER;
 var allCaches = [
   staticCacheName,
   contentImgsCache
@@ -521,6 +521,12 @@ self.addEventListener('fetch', function(event){
         return;
     }
 
+    //review
+    if(requestUrl.pathname === '/reviews/' && event.request.method === 'post'){
+        console.log('Logging the post request');
+        debugger;
+    }
+
 
     // event.respondWith(
     //     caches.match(event.request).then(function(response){
@@ -557,7 +563,7 @@ function servePhoto(request) {
   
     //console.log(storageUrl);
     return caches.open(contentImgsCache).then(function(cache){
-        return cache.match(storageUrl).then(function(response){
+        return cache.match(storageUrl,{ignoreSearch:true}).then(function(response){
             if (response) return response;
 
             return fetch(request).then(function(networkResponse){

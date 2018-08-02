@@ -177,8 +177,8 @@ fillReviewsHTML = (reviews) => {
 createFormHTML = (id) => {
   const form = document.createElement('form');
   form.className = 'commentsform';
-  form.action = 'http://localhost:8000/';
-  form.method = 'GET';
+  form.action = 'http://localhost:1337/reviews/';
+  form.method = 'post';
   form.innerHTML = `
   <input id="restaurantId" name="restaurantId" type="hidden" value="${id}">
   <label>Name:
