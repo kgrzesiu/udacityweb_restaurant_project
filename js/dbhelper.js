@@ -30,7 +30,7 @@ class DBHelper {
 
   static returnFetchPostOption(data){
     return {
-      method: 'post',
+      method: 'POST',
       body: JSON.stringify(data),
       headers: {
         'Content-Type': 'application/json'
@@ -43,7 +43,9 @@ class DBHelper {
    * Save review
    */
   static saveReview(review) {
-    return fetch(DBHelper.REVIEWS_URL_SAVE, DBHelper.returnFetchPostOption(review))
+    const options = DBHelper.returnFetchPostOption(review);
+    console.log('Options',options);
+    return fetch(DBHelper.REVIEWS_URL_SAVE(), options)
     .then( response => {
       if (response.ok){
         return response.json();
