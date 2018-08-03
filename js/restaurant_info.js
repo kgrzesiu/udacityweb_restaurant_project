@@ -148,7 +148,7 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
  */
 fillReviewsHTML = (reviews) => {
   const container = document.getElementById('reviews-container');
-  const title = document.createElement('h2');
+  const title = document.createElement('h3');
   title.innerHTML = 'Reviews';
   container.appendChild(title);
 
@@ -179,6 +179,7 @@ fillReviewsHTML = (reviews) => {
 createFormHTML = (id) => {
   const form = document.createElement('form');
   form.className = 'commentsform';
+  form.role = 'form';
   //cannot make it with action
   // form.action = 'http://localhost:1337/reviews/';
   //form.action = 'http://localhost:8000/reviews/';

@@ -94,7 +94,6 @@ class DBHelper {
       var deferedItems = localStorage.getItem(DBHelper.LOCAL_STORAGE_REF());
       if (deferedItems !== null){
         deferedItems = JSON.parse(deferedItems);
-        debugger;
         for (var item of deferedItems){
           DBHelper.saveOnlineReview(JSON.parse(item));
         }
