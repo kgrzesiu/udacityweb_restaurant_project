@@ -54,6 +54,9 @@ class DBHelper {
       //we are not online
       DBHelper.offlineSaveReview(review);
     }
+
+    //save to database anyway
+    navigator.serviceWorker.controller.postMessage({'action':'saveReview', 'data':review});
   }
 
   /**

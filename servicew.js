@@ -326,7 +326,7 @@ class IndexDBHelper {
    * Open database, and returns the promise
    */
   static openDatabase() {
-    return idb.open(IndexDBHelper.DB_NAME, 3, function(upgradeDb){
+    return idb.open(IndexDBHelper.DB_NAME, 4, function(upgradeDb){
         console.log('Opening database');
         switch(upgradeDb.oldVersion){
             case 0:
@@ -335,10 +335,47 @@ class IndexDBHelper {
                 var restStore = upgradeDb.transaction.objectStore(IndexDBHelper.RESTAURANTS);
                 restStore.createIndex(IndexDBHelper.NEIGHBORHOOD_INDEX,IndexDBHelper.NEIGHBORHOOD_PROP);
                 restStore.createIndex(IndexDBHelper.CUISINE_INDEX,IndexDBHelper.CUISINE_PROP);
+            case 2:
+                upgradeDb.createObjectStore(IndexDBHelper.REVIEWS, { keyPath:'id'});
+                var restStore = upgradeDb.transaction.objectStore(IndexDBHelper.REVIEWS);
+                restStore.createIndex(IndexDBHelper.REVIEWS_RESTAURANT_INDEX, IndexDBHelper.REVIEWS_RESTAURANT_INDEX_PROP);
         }
     });
   }
   
+  /**
+   * Get's all the reviews by restaurant ID
+   */
+  static getReviewsByRestaurantId(id) {
+    var dbPromise = IndexDBHelper.openDatabase();
+    return dbPromise.then(function(db){
+        return db.transaction(IndexDBHelper.REVIEWS,'readonly')
+        .objectStore(IndexDBHelper.REVIEWS)
+        .index(IndexDBHelper.REVIEWS_RESTAURANT_INDEX)
+        .get(id);
+    });
+  }
+
+  /**
+   * Save reviews in store
+   */
+  static saveReviewWithPromise(dbPromise, review) {
+    return dbPromise.then(function(db){
+        return db.transaction(IndexDBHelper.REVIEWS,'readwrite')
+        .objectStore(IndexDBHelper.REVIEWS)
+        .put(review);
+    });
+  }
+
+  static saveReview(review) {
+    var dbPromise = IndexDBHelper.openDatabase();
+    return dbPromise.then(function(db){
+        return db.transaction(IndexDBHelper.REVIEWS,'readwrite')
+        .objectStore(IndexDBHelper.REVIEWS)
+        .put(review);
+    });
+  }  
+
   /**
    * Get's all the restaurants
    */
@@ -375,7 +412,7 @@ class IndexDBHelper {
         .objectStore(IndexDBHelper.RESTAURANTS)
         .put(restaurant);
     });
-  }
+  }  
 
   static getRestaurantByIdWithPromise(dbPromise, id) {
     return dbPromise.then(function(db){
@@ -389,6 +426,10 @@ class IndexDBHelper {
 IndexDBHelper.DB_NAME = 'stage2db';
 IndexDBHelper.RESTAURANTS = 'restaurants';
 
+IndexDBHelper.REVIEWS = 'reviews';
+IndexDBHelper.REVIEWS_RESTAURANT_INDEX = 'restaurant_id';
+IndexDBHelper.REVIEWS_RESTAURANT_INDEX_PROP = 'restaurant_id';
+
 IndexDBHelper.CUISINE_INDEX = 'cuisine';
 IndexDBHelper.CUISINE_PROP = 'cuisine_type';
 
@@ -400,7 +441,7 @@ IndexDBHelper.NEIGHBORHOOD_PROP = 'neighborhood';
 // self.importScripts('/js/libs/idb.js');
 
 
-var WORKER_VER = 62;
+var WORKER_VER = 69;
 var staticCacheName = 'site-static-'+WORKER_VER;
 var contentImgsCache = 'site-static-imgs-'+WORKER_VER;
 var allCaches = [
@@ -451,6 +492,12 @@ self.addEventListener('activate', function(event){
     );
 });
 
+self.addEventListener('message', event => { 
+  console.log('Message from web page:',event);
+  if (event.action === 'saveReview'){
+    IndexDBHelper.saveReview(event.data);
+  }
+});
 
 
 function storeRestaurantsInDB(restaurants){
@@ -466,6 +513,21 @@ function storeRestaurantsInDB(restaurants){
     });
     return restaurants;
 }
+
+function storeReviewsInDB(reviews){
+  let rclone = reviews.clone();
+  rclone.json().then(function(resJson){
+      const db = IndexDBHelper.openDatabase();
+      for (const review of resJson){
+          IndexDBHelper.saveReviewWithPromise(db, review)
+          .then(saveRes => {
+              //console.log('Saved', saveRes);
+          });
+      }
+  });
+  return reviews;
+}
+
 
 function returnRestaurantsFromDB(err){
     return IndexDBHelper.getAllRestaurants().then(res => {
@@ -512,7 +574,8 @@ self.addEventListener('fetch', function(event){
     //http://localhost:1337/restaurants/1
     if (requestUrl.pathname.startsWith('/restaurants/')) {
         var id = +requestUrl.pathname.split('/')[2];
-        
+
+        //respond
         event.respondWith(
             fetch(event.request.url)
             .then(res => { 
@@ -531,6 +594,36 @@ self.addEventListener('fetch', function(event){
         );
         return;
     }
+
+    //reviews for restaurant by id
+    //http://localhost:1337/reviews/?restaurant_id=1
+    console.log('Path name',requestUrl.pathname);
+    if (requestUrl.pathname.startsWith('/reviews')) {
+      
+      id = +requestUrl.searchParams.get('restaurant_id');
+      // debugger;
+
+      console.log('Storing reviews');
+
+      event.respondWith(
+          fetch(event.request.url)
+          .then(res => { 
+              console.log('Fetching remote reviews');
+              return res;
+          })
+          .then(storeReviewsInDB)
+          .catch(err =>{
+              console.log('Fetching reviews from database with id',id);
+              return IndexDBHelper.getRestaurantById(id).then(res => {
+                  //got one restaurant from database
+                  return new Response(JSON.stringify(res), {
+                      headers: {'Content-Type': 'application/json'}
+                  });
+              });
+          })
+      );
+      return;
+  }
 
     // event.respondWith(
     //     caches.match(event.request).then(function(response){
