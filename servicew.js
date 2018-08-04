@@ -443,6 +443,7 @@ IndexDBHelper.NEIGHBORHOOD_PROP = 'neighborhood';
 // self.importScripts('/js/indexdbhelper.js');
 // self.importScripts('/js/libs/idb.js');
 
+var LOCAL_STORAGE_REF = "deferedReviewLocalStorage";
 
 var WORKER_VER = 69;
 var staticCacheName = 'site-static-'+WORKER_VER;
@@ -501,6 +502,24 @@ self.addEventListener('message', event => {
     //THIS will not work, we don't have the id of the review yet
     //console.log("Saving review in database",event.data.data);
     //IndexDBHelper.saveReview(event.data.data);
+  }
+});
+
+self.addEventListener('sync', function(event) {
+  console.log('sync',event.tag);
+  if (event.tag == 'outboxOnlineSync') {
+    event.waitUntil(new Promise(function(resolve,reject){
+      
+      //get local storage
+      var deferedItems = localStorage.getItem(LOCAL_STORAGE_REF);
+      if (deferedItems !== null){
+        deferedItems = JSON.parse(deferedItems);
+        for (var item of deferedItems){
+          console.log('Item do defer save', JSON.parse(item));
+        }
+      }
+      resolve('Synced!');
+    }));
   }
 });
 

@@ -55,7 +55,7 @@ class DBHelper {
       });
     } else {
       //we are not online
-      //DBHelper.offlineSaveReview(review);
+      DBHelper.offlineSaveReview(review);
     }
 
     //save to database anyway
@@ -87,22 +87,33 @@ class DBHelper {
         return response.json();
       }
     }).catch(function(err){
-      console.error('Save review error', review, err);
+      console.error('Save review online error', review, err);
     });
+  }
+
+  static saveReviewToLocalStorage(review){
+      //save array of reviews if we are offline
+      var deferedItems = localStorage.getItem(DBHelper.LOCAL_STORAGE_REF());
+      if (deferedItems === null){
+        deferedItems = [];
+      } else {
+        deferedItems = JSON.parse(deferedItems);
+      }
+      deferedItems.push(JSON.stringify(review));
+      localStorage.setItem(DBHelper.LOCAL_STORAGE_REF(), JSON.stringify(deferedItems) );
   }
   /**
    * Save review offline
    */
   static offlineSaveReview(review) {
-    //save array of reviews if we are offline
-    var deferedItems = localStorage.getItem(DBHelper.LOCAL_STORAGE_REF());
-    if (deferedItems === null){
-      deferedItems = [];
-    } else {
-      deferedItems = JSON.parse(deferedItems);
-    }
-    deferedItems.push(JSON.stringify(review));
-    localStorage.setItem(DBHelper.LOCAL_STORAGE_REF(), JSON.stringify(deferedItems) );
+    //register for sync
+    //How do I send the data with sync? Useless for now...
+    console.log('Sync registration request');
+    navigator.serviceWorker.ready.then(function(swRegistration) {
+      return swRegistration.sync.register('outboxOnlineSync');
+    });
+
+    DBHelper.saveReviewToLocalStorage(review);
 
     //listen to online state, and try to save 
     window.addEventListener('online', ()=>{
@@ -114,7 +125,6 @@ class DBHelper {
           DBHelper.saveOnlineReview(JSON.parse(item));
         }
       }
-
       localStorage.removeItem(DBHelper.LOCAL_STORAGE_REF());
     })
   }
