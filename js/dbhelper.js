@@ -21,11 +21,15 @@ class DBHelper {
   }
 
   static REVIEWS_URL_RESTAURANT_ID(id){
-    return ` http://localhost:${DBHelper.port}/reviews/?restaurant_id=${id}`
+    return `http://localhost:${DBHelper.port}/reviews/?restaurant_id=${id}`
   }
 
   static REVIEWS_URL_SAVE(){
-    return ` http://localhost:${DBHelper.port}/reviews/`
+    return `http://localhost:${DBHelper.port}/reviews/`
+  }
+
+  static FAVORITE_STATE_CHANGE_URL(id, state){
+    return `http://localhost:${DBHelper.port}/restaurants/${id}/?is_favorite=${state}`
   }
 
   static returnFetchPostOption(data){
@@ -275,6 +279,22 @@ class DBHelper {
       return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
     }
     return (`/img/400_${restaurant.photograph}.jpg`);
+  }
+
+  /**
+   * Change state of the restaurante, state is a new state.
+   */
+  static changeFavoriteState(id, state){
+    console.log("Change restaurant state",id,state);
+    
+    return fetch(DBHelper.FAVORITE_STATE_CHANGE_URL(id,state), { method: "PUT"})
+    .then( res => {
+      if (res.ok){
+        return res;
+      }
+    }).catch(function(err){
+      console.log('Change favorite state', err);
+    });
   }
 
   /**

@@ -137,6 +137,7 @@ nav h1 a {
   text-align: center;
 }
 #restaurants-list li {
+  position: relative;
   background-color: #fff;
   border: 2px solid #ccc;
   font-family: Arial,sans-serif;
@@ -146,6 +147,14 @@ nav h1 a {
   text-align: left;
   width: 270px;
 }
+#restaurants-list .favorite-button {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+}
+
 #restaurants-list .restaurant-img {
   background-color: #fff;
   display: block;

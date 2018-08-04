@@ -154,6 +154,22 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
 /**
  * Create restaurant HTML.
  */
+function favoriteToggle(el,id){
+  if (el.value == "false"){
+    el.value = "true";
+    el.innerHTML = "&hearts;";
+    el.setAttribute("aria-label", "Remove from favorites");
+    DBHelper.changeFavoriteState(id, true);
+  } else {
+    el.value = "false";
+    el.innerHTML = "&#9825";
+    el.setAttribute("aria-label", "Add to favorites");
+    DBHelper.changeFavoriteState(id, false);
+  }
+}
+/**
+ * Create restaurant HTML.
+ */
 createRestaurantHTML = (restaurant) => {
   const li = document.createElement('li');
 
@@ -196,6 +212,23 @@ createRestaurantHTML = (restaurant) => {
   more.setAttribute('role','button');
   more.href = DBHelper.urlForRestaurant(restaurant);
   li.append(more)
+
+  const favorite = document.createElement('button');
+  favorite.role = 'Button';
+  
+  favorite.className = "favorite-button";
+  //we need to check value, since sometimes is undefined, then also false
+  var value = restaurant.is_favorite ? restaurant.is_favorite : false;
+  var isOn = value ? "&hearts;" : "&#9825";
+  favorite.innerHTML = isOn;
+  favorite.value = value;
+  if (value){
+    favorite.setAttribute('aria-label','Remove from favorites');
+  } else {
+    favorite.setAttribute('aria-label','Add to favorites');
+  }
+  favorite.addEventListener('click', favoriteToggle.bind(null, favorite, restaurant.id), false); 
+  li.append(favorite);
 
   return li
 }

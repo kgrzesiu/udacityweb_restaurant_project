@@ -606,6 +606,15 @@ self.addEventListener('fetch', function(event){
     if (requestUrl.pathname.startsWith('/restaurants/')) {
         var id = +requestUrl.pathname.split('/')[2];
 
+        //if method is put just skip it
+        if (req.method =="PUT"){
+          console.log('Bypassing PUT in service worker');
+          event.respondWith(
+            fetch(event.request)
+          );
+          return;
+        }
+
         //respond
         event.respondWith(
             fetch(event.request.url)
