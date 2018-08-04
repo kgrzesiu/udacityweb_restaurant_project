@@ -1,4 +1,10 @@
+
+// Sometimes doesn't work?
+// self.importScripts('/js/indexdbhelper.js');
+// self.importScripts('/js/libs/idb.js');
+
 /*============================================IDB.JS============================*/
+//Should be in importScripts but didn't work for some reason!
 'use strict';
 
 (function() {
@@ -319,7 +325,7 @@
 /*==============================================================================*/
 
 /*============================================indexdbhelper.js============================*/
-console.log('Imporetd IndexDBHelper');
+//Should be in importScripts but didn't work for some reason!
 
 class IndexDBHelper { 
    /**
@@ -446,9 +452,6 @@ IndexDBHelper.CUISINE_PROP = 'cuisine_type';
 IndexDBHelper.NEIGHBORHOOD_INDEX = 'neighborhood';
 IndexDBHelper.NEIGHBORHOOD_PROP = 'neighborhood';
 /*========================================================================================*/
-
-// self.importScripts('/js/indexdbhelper.js');
-// self.importScripts('/js/libs/idb.js');
 
 var LOCAL_STORAGE_REF = "deferedReviewLocalStorage";
 
