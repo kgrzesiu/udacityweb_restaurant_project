@@ -517,19 +517,8 @@ self.addEventListener('message', event => {
 
 self.addEventListener('sync', function(event) {
   console.log('sync',event.tag);
-  if (event.tag == 'outboxOnlineSync') {
-    event.waitUntil(new Promise(function(resolve,reject){
-      
-      //get local storage
-      var deferedItems = localStorage.getItem(LOCAL_STORAGE_REF);
-      if (deferedItems !== null){
-        deferedItems = JSON.parse(deferedItems);
-        for (var item of deferedItems){
-          console.log('Item do defer save', JSON.parse(item));
-        }
-      }
-      resolve('Synced!');
-    }));
+  if (event.tag == 'favoritesSync') {
+    
   }
 });
 

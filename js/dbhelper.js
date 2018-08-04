@@ -286,7 +286,16 @@ class DBHelper {
    */
   static changeFavoriteState(id, state){
     console.log("Change restaurant state",id,state);
+
+    //register sync
+    navigator.serviceWorker.ready.then(function(swRegistration) {
+      return swRegistration.sync.register('favoritesSync');
+    })
+    .then(() => {
+      console.log('Favorites sync registered');
+    });
     
+    //change the favorites state
     return fetch(DBHelper.FAVORITE_STATE_CHANGE_URL(id,state), { method: "PUT"})
     .then( res => {
       if (res.ok){
