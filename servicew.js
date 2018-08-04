@@ -452,7 +452,7 @@ IndexDBHelper.NEIGHBORHOOD_PROP = 'neighborhood';
 
 var LOCAL_STORAGE_REF = "deferedReviewLocalStorage";
 
-var WORKER_VER = 70;
+var WORKER_VER = 71;
 var staticCacheName = 'site-static-'+WORKER_VER;
 var contentImgsCache = 'site-static-imgs-'+WORKER_VER;
 var allCaches = [
@@ -607,10 +607,22 @@ self.addEventListener('fetch', function(event){
         var id = +requestUrl.pathname.split('/')[2];
 
         //if method is put just skip it
+        //http://localhost:1337/restaurants/1/?is_favorite=false
         if (req.method =="PUT"){
           console.log('Bypassing PUT in service worker');
           event.respondWith(
             fetch(event.request)
+            .then(mainRes => {
+              var state = requestUrl.searchParams.get('is_favorite');
+              state = state === "true" ? true : false;
+              //get the restaurant locally
+              IndexDBHelper.getRestaurantById(id).then(res=>{
+                  res['is_favorite'] = state;
+                  IndexDBHelper.saveRestaurant(res).then( r => {
+                })
+              })
+              return mainRes;
+            })
           );
           return;
         }
@@ -653,7 +665,7 @@ self.addEventListener('fetch', function(event){
 
       //this is get, so just get all the reviews
       id = +requestUrl.searchParams.get('restaurant_id');
-      console.log("GET reviews for restaurant",id,"Post",req.method,"Request fetch url",event.request.url);
+      //console.log("GET reviews for restaurant",id,"Post",req.method,"Request fetch url",event.request.url);
       event.respondWith(
           fetch(event.request.url)
           .then(res => { 

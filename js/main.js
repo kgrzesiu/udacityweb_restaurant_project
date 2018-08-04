@@ -156,12 +156,12 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
  */
 function favoriteToggle(el,id){
   if (el.value == "false"){
-    el.value = "true";
+    el.value = true;
     el.innerHTML = "&hearts;";
     el.setAttribute("aria-label", "Remove from favorites");
     DBHelper.changeFavoriteState(id, true);
   } else {
-    el.value = "false";
+    el.value = false;
     el.innerHTML = "&#9825";
     el.setAttribute("aria-label", "Add to favorites");
     DBHelper.changeFavoriteState(id, false);
@@ -218,9 +218,9 @@ createRestaurantHTML = (restaurant) => {
   
   favorite.className = "favorite-button";
   //we need to check value, since sometimes is undefined, then also false
-  var value = restaurant.is_favorite ? restaurant.is_favorite : false;
-  var isOn = value ? "&hearts;" : "&#9825";
-  favorite.innerHTML = isOn;
+  var value = restaurant.is_favorite && (restaurant.is_favorite == true || restaurant.is_favorite == "true") ? true : false;
+  var symbolCode = value ? "&hearts;" : "&#9825";
+  favorite.innerHTML = symbolCode;
   favorite.value = value;
   if (value){
     favorite.setAttribute('aria-label','Remove from favorites');
