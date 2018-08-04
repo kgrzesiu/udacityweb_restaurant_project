@@ -285,15 +285,18 @@ class DBHelper {
    * Change state of the restaurante, state is a new state.
    */
   static changeFavoriteState(id, state){
-    console.log("Change restaurant state",id,state);
-
+    
+    
     //register sync
-    navigator.serviceWorker.ready.then(function(swRegistration) {
-      return swRegistration.sync.register('favoritesSync');
-    })
-    .then(() => {
-      console.log('Favorites sync registered');
-    });
+    if (!navigator.onLine){
+      console.log('Navigator offline, register sync');
+      navigator.serviceWorker.ready.then(function(swRegistration) {
+        return swRegistration.sync.register('favoritesSync');
+      })
+      .then(() => {
+        console.log('Favorites sync registered');
+      });
+    }
     
     //change the favorites state
     return fetch(DBHelper.FAVORITE_STATE_CHANGE_URL(id,state), { method: "PUT"})
@@ -302,7 +305,7 @@ class DBHelper {
         return res;
       }
     }).catch(function(err){
-      console.log('Change favorite state', err);
+      console.log('Failed favorite state change:', err);
     });
   }
 

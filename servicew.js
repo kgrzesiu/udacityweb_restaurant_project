@@ -1,461 +1,12 @@
 
 // Sometimes doesn't work?
-// self.importScripts('/js/indexdbhelper.js');
-// self.importScripts('/js/libs/idb.js');
+self.importScripts('/js/libs/indexdbhelper.js');
+self.importScripts('/js/libs/idb.js');
 
-/*============================================IDB.JS============================*/
-//Should be in importScripts but didn't work for some reason!
-'use strict';
-
-(function() {
-  function toArray(arr) {
-    return Array.prototype.slice.call(arr);
-  }
-
-  function promisifyRequest(request) {
-    return new Promise(function(resolve, reject) {
-      request.onsuccess = function() {
-        resolve(request.result);
-      };
-
-      request.onerror = function() {
-        reject(request.error);
-      };
-    });
-  }
-
-  function promisifyRequestCall(obj, method, args) {
-    var request;
-    var p = new Promise(function(resolve, reject) {
-      request = obj[method].apply(obj, args);
-      promisifyRequest(request).then(resolve, reject);
-    });
-
-    p.request = request;
-    return p;
-  }
-
-  function promisifyCursorRequestCall(obj, method, args) {
-    var p = promisifyRequestCall(obj, method, args);
-    return p.then(function(value) {
-      if (!value) return;
-      return new Cursor(value, p.request);
-    });
-  }
-
-  function proxyProperties(ProxyClass, targetProp, properties) {
-    properties.forEach(function(prop) {
-      Object.defineProperty(ProxyClass.prototype, prop, {
-        get: function() {
-          return this[targetProp][prop];
-        },
-        set: function(val) {
-          this[targetProp][prop] = val;
-        }
-      });
-    });
-  }
-
-  function proxyRequestMethods(ProxyClass, targetProp, Constructor, properties) {
-    properties.forEach(function(prop) {
-      if (!(prop in Constructor.prototype)) return;
-      ProxyClass.prototype[prop] = function() {
-        return promisifyRequestCall(this[targetProp], prop, arguments);
-      };
-    });
-  }
-
-  function proxyMethods(ProxyClass, targetProp, Constructor, properties) {
-    properties.forEach(function(prop) {
-      if (!(prop in Constructor.prototype)) return;
-      ProxyClass.prototype[prop] = function() {
-        return this[targetProp][prop].apply(this[targetProp], arguments);
-      };
-    });
-  }
-
-  function proxyCursorRequestMethods(ProxyClass, targetProp, Constructor, properties) {
-    properties.forEach(function(prop) {
-      if (!(prop in Constructor.prototype)) return;
-      ProxyClass.prototype[prop] = function() {
-        return promisifyCursorRequestCall(this[targetProp], prop, arguments);
-      };
-    });
-  }
-
-  function Index(index) {
-    this._index = index;
-  }
-
-  proxyProperties(Index, '_index', [
-    'name',
-    'keyPath',
-    'multiEntry',
-    'unique'
-  ]);
-
-  proxyRequestMethods(Index, '_index', IDBIndex, [
-    'get',
-    'getKey',
-    'getAll',
-    'getAllKeys',
-    'count'
-  ]);
-
-  proxyCursorRequestMethods(Index, '_index', IDBIndex, [
-    'openCursor',
-    'openKeyCursor'
-  ]);
-
-  function Cursor(cursor, request) {
-    this._cursor = cursor;
-    this._request = request;
-  }
-
-  proxyProperties(Cursor, '_cursor', [
-    'direction',
-    'key',
-    'primaryKey',
-    'value'
-  ]);
-
-  proxyRequestMethods(Cursor, '_cursor', IDBCursor, [
-    'update',
-    'delete'
-  ]);
-
-  // proxy 'next' methods
-  ['advance', 'continue', 'continuePrimaryKey'].forEach(function(methodName) {
-    if (!(methodName in IDBCursor.prototype)) return;
-    Cursor.prototype[methodName] = function() {
-      var cursor = this;
-      var args = arguments;
-      return Promise.resolve().then(function() {
-        cursor._cursor[methodName].apply(cursor._cursor, args);
-        return promisifyRequest(cursor._request).then(function(value) {
-          if (!value) return;
-          return new Cursor(value, cursor._request);
-        });
-      });
-    };
-  });
-
-  function ObjectStore(store) {
-    this._store = store;
-  }
-
-  ObjectStore.prototype.createIndex = function() {
-    return new Index(this._store.createIndex.apply(this._store, arguments));
-  };
-
-  ObjectStore.prototype.index = function() {
-    return new Index(this._store.index.apply(this._store, arguments));
-  };
-
-  proxyProperties(ObjectStore, '_store', [
-    'name',
-    'keyPath',
-    'indexNames',
-    'autoIncrement'
-  ]);
-
-  proxyRequestMethods(ObjectStore, '_store', IDBObjectStore, [
-    'put',
-    'add',
-    'delete',
-    'clear',
-    'get',
-    'getAll',
-    'getKey',
-    'getAllKeys',
-    'count'
-  ]);
-
-  proxyCursorRequestMethods(ObjectStore, '_store', IDBObjectStore, [
-    'openCursor',
-    'openKeyCursor'
-  ]);
-
-  proxyMethods(ObjectStore, '_store', IDBObjectStore, [
-    'deleteIndex'
-  ]);
-
-  function Transaction(idbTransaction) {
-    this._tx = idbTransaction;
-    this.complete = new Promise(function(resolve, reject) {
-      idbTransaction.oncomplete = function() {
-        resolve();
-      };
-      idbTransaction.onerror = function() {
-        reject(idbTransaction.error);
-      };
-      idbTransaction.onabort = function() {
-        reject(idbTransaction.error);
-      };
-    });
-  }
-
-  Transaction.prototype.objectStore = function() {
-    return new ObjectStore(this._tx.objectStore.apply(this._tx, arguments));
-  };
-
-  proxyProperties(Transaction, '_tx', [
-    'objectStoreNames',
-    'mode'
-  ]);
-
-  proxyMethods(Transaction, '_tx', IDBTransaction, [
-    'abort'
-  ]);
-
-  function UpgradeDB(db, oldVersion, transaction) {
-    this._db = db;
-    this.oldVersion = oldVersion;
-    this.transaction = new Transaction(transaction);
-  }
-
-  UpgradeDB.prototype.createObjectStore = function() {
-    return new ObjectStore(this._db.createObjectStore.apply(this._db, arguments));
-  };
-
-  proxyProperties(UpgradeDB, '_db', [
-    'name',
-    'version',
-    'objectStoreNames'
-  ]);
-
-  proxyMethods(UpgradeDB, '_db', IDBDatabase, [
-    'deleteObjectStore',
-    'close'
-  ]);
-
-  function DB(db) {
-    this._db = db;
-  }
-
-  DB.prototype.transaction = function() {
-    return new Transaction(this._db.transaction.apply(this._db, arguments));
-  };
-
-  proxyProperties(DB, '_db', [
-    'name',
-    'version',
-    'objectStoreNames'
-  ]);
-
-  proxyMethods(DB, '_db', IDBDatabase, [
-    'close'
-  ]);
-
-  // Add cursor iterators
-  // TODO: remove this once browsers do the right thing with promises
-  ['openCursor', 'openKeyCursor'].forEach(function(funcName) {
-    [ObjectStore, Index].forEach(function(Constructor) {
-      // Don't create iterateKeyCursor if openKeyCursor doesn't exist.
-      if (!(funcName in Constructor.prototype)) return;
-
-      Constructor.prototype[funcName.replace('open', 'iterate')] = function() {
-        var args = toArray(arguments);
-        var callback = args[args.length - 1];
-        var nativeObject = this._store || this._index;
-        var request = nativeObject[funcName].apply(nativeObject, args.slice(0, -1));
-        request.onsuccess = function() {
-          callback(request.result);
-        };
-      };
-    });
-  });
-
-  // polyfill getAll
-  [Index, ObjectStore].forEach(function(Constructor) {
-    if (Constructor.prototype.getAll) return;
-    Constructor.prototype.getAll = function(query, count) {
-      var instance = this;
-      var items = [];
-
-      return new Promise(function(resolve) {
-        instance.iterateCursor(query, function(cursor) {
-          if (!cursor) {
-            resolve(items);
-            return;
-          }
-          items.push(cursor.value);
-
-          if (count !== undefined && items.length == count) {
-            resolve(items);
-            return;
-          }
-          cursor.continue();
-        });
-      });
-    };
-  });
-
-  var exp = {
-    open: function(name, version, upgradeCallback) {
-      var p = promisifyRequestCall(indexedDB, 'open', [name, version]);
-      var request = p.request;
-
-      if (request) {
-        request.onupgradeneeded = function(event) {
-          if (upgradeCallback) {
-            upgradeCallback(new UpgradeDB(request.result, event.oldVersion, request.transaction));
-          }
-        };
-      }
-
-      return p.then(function(db) {
-        return new DB(db);
-      });
-    },
-    delete: function(name) {
-      return promisifyRequestCall(indexedDB, 'deleteDatabase', [name]);
-    }
-  };
-
-  if (typeof module !== 'undefined') {
-    module.exports = exp;
-    module.exports.default = module.exports;
-  }
-  else {
-    self.idb = exp;
-  }
-}());
-
-/*==============================================================================*/
-
-/*============================================indexdbhelper.js============================*/
-//Should be in importScripts but didn't work for some reason!
-
-class IndexDBHelper { 
-   /**
-   * Open database, and returns the promise
-   */
-  static openDatabase() {
-    return idb.open(IndexDBHelper.DB_NAME, 4, function(upgradeDb){
-        console.log('Opening database');
-        switch(upgradeDb.oldVersion){
-            case 0:
-                upgradeDb.createObjectStore(IndexDBHelper.RESTAURANTS, { keyPath:'id'});
-            case 1:
-                var restStore = upgradeDb.transaction.objectStore(IndexDBHelper.RESTAURANTS);
-                restStore.createIndex(IndexDBHelper.NEIGHBORHOOD_INDEX,IndexDBHelper.NEIGHBORHOOD_PROP);
-                restStore.createIndex(IndexDBHelper.CUISINE_INDEX,IndexDBHelper.CUISINE_PROP);
-            case 2:
-                upgradeDb.createObjectStore(IndexDBHelper.REVIEWS, { keyPath:'id'});
-                var restStore = upgradeDb.transaction.objectStore(IndexDBHelper.REVIEWS);
-                restStore.createIndex(IndexDBHelper.REVIEWS_RESTAURANT_INDEX, IndexDBHelper.REVIEWS_RESTAURANT_INDEX_PROP);
-        }
-    });
-  }
-  
-  /**
-   * Get's all the reviews by restaurant ID
-   */
-  static getReviewsByRestaurantId(id) {
-    // var dbPromise = IndexDBHelper.openDatabase();
-    // return dbPromise.then(function(db){
-    //     var tx = db.transaction(IndexDBHelper.REVIEWS);
-    //     var reviewsStore = tx.objectStore(IndexDBHelper.REVIEWS);
-    //     return reviewsStore.getAll();
-    // });
-
-    var dbPromise = IndexDBHelper.openDatabase();
-    return dbPromise.then(function(db){
-        var tx = db.transaction(IndexDBHelper.REVIEWS,'readwrite');
-        var reviewStore = tx.objectStore(IndexDBHelper.REVIEWS);
-        var reviewRestaurantIndex = reviewStore.index(IndexDBHelper.REVIEWS_RESTAURANT_INDEX);
-        return reviewRestaurantIndex.getAll(id);
-    });
-  }
-
-  /**
-   * Save reviews in store
-   */
-  static saveReviewWithPromise(dbPromise, review) {
-    return dbPromise.then(function(db){
-        return db.transaction(IndexDBHelper.REVIEWS,'readwrite')
-        .objectStore(IndexDBHelper.REVIEWS)
-        .put(review);
-    });
-  }
-  /**
-   * Save reviews in store
-   */
-  static saveReview(review) {
-    var dbPromise = IndexDBHelper.openDatabase();
-    console.log('Saving review in database',review);
-    return dbPromise.then(function(db){
-        return db.transaction(IndexDBHelper.REVIEWS,'readwrite')
-        .objectStore(IndexDBHelper.REVIEWS)
-        .put(review);
-    });
-  }  
-
-  /**
-   * Get's all the restaurants
-   */
-  static getAllRestaurants() {
-    var dbPromise = IndexDBHelper.openDatabase();
-    return dbPromise.then(function(db){
-        var tx = db.transaction(IndexDBHelper.RESTAURANTS);
-        var restaurantsStore = tx.objectStore(IndexDBHelper.RESTAURANTS);
-        return restaurantsStore.getAll();
-    });
-  }
-
-  static saveRestaurant(restaurant) {
-    var dbPromise = IndexDBHelper.openDatabase();
-    return dbPromise.then(function(db){
-        var tx = db.transaction(IndexDBHelper.RESTAURANTS,'readwrite');
-        var restStore = tx.objectStore(IndexDBHelper.RESTAURANTS);
-        restStore.put(restaurant);
-    });
-  }
-
-  static getRestaurantById(id) {
-    var dbPromise = IndexDBHelper.openDatabase();
-    return dbPromise.then(function(db){
-        return db.transaction(IndexDBHelper.RESTAURANTS,'readonly')
-        .objectStore(IndexDBHelper.RESTAURANTS)
-        .get(id);
-    });
-  }
-
-  static saveRestaurantWithPromise(dbPromise, restaurant) {
-    return dbPromise.then(function(db){
-        return db.transaction(IndexDBHelper.RESTAURANTS,'readwrite')
-        .objectStore(IndexDBHelper.RESTAURANTS)
-        .put(restaurant);
-    });
-  }  
-
-  static getRestaurantByIdWithPromise(dbPromise, id) {
-    return dbPromise.then(function(db){
-        return db.transaction(IndexDBHelper.RESTAURANTS,'readonly')
-        .objectStore(IndexDBHelper.RESTAURANTS)
-        .get(id);
-    });
-  }
-}
-
-IndexDBHelper.DB_NAME = 'stage2db';
-IndexDBHelper.RESTAURANTS = 'restaurants';
-
-IndexDBHelper.REVIEWS = 'reviews';
-IndexDBHelper.REVIEWS_RESTAURANT_INDEX = 'restaurant_id';
-IndexDBHelper.REVIEWS_RESTAURANT_INDEX_PROP = 'restaurant_id';
-
-IndexDBHelper.CUISINE_INDEX = 'cuisine';
-IndexDBHelper.CUISINE_PROP = 'cuisine_type';
-
-IndexDBHelper.NEIGHBORHOOD_INDEX = 'neighborhood';
-IndexDBHelper.NEIGHBORHOOD_PROP = 'neighborhood';
-/*========================================================================================*/
+var WORKER_VER = 80;
 
 var LOCAL_STORAGE_REF = "deferedReviewLocalStorage";
 
-var WORKER_VER = 71;
 var staticCacheName = 'site-static-'+WORKER_VER;
 var contentImgsCache = 'site-static-imgs-'+WORKER_VER;
 var allCaches = [
@@ -516,9 +67,19 @@ self.addEventListener('message', event => {
 });
 
 self.addEventListener('sync', function(event) {
-  console.log('sync',event.tag);
+  console.log('Online state regained, syncing: ',event.tag);
   if (event.tag == 'favoritesSync') {
-    
+    return IndexDBHelper.getAllFavorites().then(favs =>{
+      return Promise.all(favs.map(function(fav){
+        return fetch(fav.url, { method: "PUT"})
+              .then(res => {
+                //if success
+                if (res.ok){
+                  IndexDBHelper.deleteFavorite(fav);
+                } 
+              })
+      }));
+    });
   }
 });
 
@@ -601,7 +162,6 @@ self.addEventListener('fetch', function(event){
         //if method is put just skip it
         //http://localhost:1337/restaurants/1/?is_favorite=false
         if (req.method =="PUT"){
-          console.log('Bypassing PUT in service worker');
           event.respondWith(
             fetch(event.request)
             .then(mainRes => {
@@ -614,6 +174,15 @@ self.addEventListener('fetch', function(event){
                 })
               })
               return mainRes;
+            })
+            .catch(err =>{
+              //failed to execute favorite request
+              console.log('Failed to excecute request',requestUrl.href);
+              return IndexDBHelper.saveFavorite(requestUrl.href)
+              .then(saveRes => {
+                    //we saved request in DB, respond
+                    return new Response('Favorite stored for later save');
+              });
             })
           );
           return;
