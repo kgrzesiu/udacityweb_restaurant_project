@@ -366,9 +366,12 @@ class IndexDBHelper {
         .put(review);
     });
   }
-
+  /**
+   * Save reviews in store
+   */
   static saveReview(review) {
     var dbPromise = IndexDBHelper.openDatabase();
+    console.log('Saving review in database',review);
     return dbPromise.then(function(db){
         return db.transaction(IndexDBHelper.REVIEWS,'readwrite')
         .objectStore(IndexDBHelper.REVIEWS)
@@ -494,8 +497,10 @@ self.addEventListener('activate', function(event){
 
 self.addEventListener('message', event => { 
   console.log('Message from web page:',event);
-  if (event.action === 'saveReview'){
-    IndexDBHelper.saveReview(event.data);
+  if (event.data.action === 'saveReview'){
+    //THIS will not work, we don't have the id of the review yet
+    //console.log("Saving review in database",event.data.data);
+    //IndexDBHelper.saveReview(event.data.data);
   }
 });
 
@@ -528,6 +533,18 @@ function storeReviewsInDB(reviews){
   return reviews;
 }
 
+function storeReviewInDB(review){
+  let rclone = review.clone();
+  rclone.json().then(function(resJson){
+      const db = IndexDBHelper.openDatabase();
+      IndexDBHelper.saveReviewWithPromise(db, resJson)
+      .then(saveRes => {
+          //console.log('Saved', saveRes);
+      });
+  });
+  return review;
+}
+
 
 function returnRestaurantsFromDB(err){
     return IndexDBHelper.getAllRestaurants().then(res => {
@@ -541,18 +558,6 @@ function returnRestaurantsFromDB(err){
 self.addEventListener('fetch', function(event){
     var req = event.request.clone();
     var requestUrl = new URL(req.url);
-
-    // console.log(requestUrl.pathname,'Fetch ',req);
-
-    //cannot catch review and get all params?
-    //http://localhost:8000/reviews/?restaurant_id=1&name=greg7&rating=5&comments=++++greg7
-    // if(requestUrl.pathname.startsWith('/reviews/')) {
-    //   let params = requestUrl.searchParams;
-    //   console.log('Logging the post request',req);
-    //   console.log('Params',params);
-    //   debugger;
-    //   return;
-    //  }
 
     if (requestUrl.pathname.startsWith('/img/')) {
         event.respondWith(servePhoto(event.request));
@@ -597,14 +602,23 @@ self.addEventListener('fetch', function(event){
 
     //reviews for restaurant by id
     //http://localhost:1337/reviews/?restaurant_id=1
-    console.log('Path name',requestUrl.pathname);
     if (requestUrl.pathname.startsWith('/reviews')) {
-      
+
+      if (req.method =="POST"){
+        //saving review
+        event.respondWith(
+          fetch(event.request)
+          .then(storeReviewInDB)
+          .catch(err => {
+            console.log('Fetch create or save review in local database failed',err);
+          })
+        );
+        return;
+      }
+
+      //this is get, so just get all the reviews
       id = +requestUrl.searchParams.get('restaurant_id');
-      // debugger;
-
-      console.log('Storing reviews');
-
+      console.log("GET reviews for restaurant",id,"Post",req.method,"Request fetch url",event.request.url);
       event.respondWith(
           fetch(event.request.url)
           .then(res => { 

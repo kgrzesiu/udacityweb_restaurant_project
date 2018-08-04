@@ -49,14 +49,30 @@ class DBHelper {
   static saveReview(review) {
     //if online 
     if(navigator.onLine) {
-      DBHelper.saveOnlineReview(review);
+      DBHelper.saveOnlineReview(review)
+      .then(res => {
+        console.log('Save review online response:', res);
+      });
     } else {
       //we are not online
-      DBHelper.offlineSaveReview(review);
+      //DBHelper.offlineSaveReview(review);
     }
 
     //save to database anyway
-    navigator.serviceWorker.controller.postMessage({'action':'saveReview', 'data':review});
+    if (navigator.serviceWorker){
+      if(navigator.serviceWorker.controller){
+        navigator.serviceWorker.controller.postMessage({'action':'saveReview', 'data':review});
+      } else {
+        console.log('Cannot send message to service worker!')
+      }
+    }
+  }
+
+  static sendMessageToServiceWorker(message){
+    return new Promise(function(resole,reject){
+      var messageChannel = new MessageChannel();
+
+    });
   }
 
   /**
@@ -64,7 +80,7 @@ class DBHelper {
    */
   static saveOnlineReview(review) {
     const options = DBHelper.returnFetchPostOption(review);
-    console.log('Options',options);
+    console.log('Saving review online',DBHelper.REVIEWS_URL_SAVE());
     return fetch(DBHelper.REVIEWS_URL_SAVE(), options)
     .then( response => {
       if (response.ok){
