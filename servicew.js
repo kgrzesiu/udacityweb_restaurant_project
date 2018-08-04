@@ -347,12 +347,19 @@ class IndexDBHelper {
    * Get's all the reviews by restaurant ID
    */
   static getReviewsByRestaurantId(id) {
+    // var dbPromise = IndexDBHelper.openDatabase();
+    // return dbPromise.then(function(db){
+    //     var tx = db.transaction(IndexDBHelper.REVIEWS);
+    //     var reviewsStore = tx.objectStore(IndexDBHelper.REVIEWS);
+    //     return reviewsStore.getAll();
+    // });
+
     var dbPromise = IndexDBHelper.openDatabase();
     return dbPromise.then(function(db){
-        return db.transaction(IndexDBHelper.REVIEWS,'readonly')
-        .objectStore(IndexDBHelper.REVIEWS)
-        .index(IndexDBHelper.REVIEWS_RESTAURANT_INDEX)
-        .get(id);
+        var tx = db.transaction(IndexDBHelper.REVIEWS,'readwrite');
+        var reviewStore = tx.objectStore(IndexDBHelper.REVIEWS);
+        var reviewRestaurantIndex = reviewStore.index(IndexDBHelper.REVIEWS_RESTAURANT_INDEX);
+        return reviewRestaurantIndex.getAll(id);
     });
   }
 
@@ -445,7 +452,7 @@ IndexDBHelper.NEIGHBORHOOD_PROP = 'neighborhood';
 
 var LOCAL_STORAGE_REF = "deferedReviewLocalStorage";
 
-var WORKER_VER = 69;
+var WORKER_VER = 70;
 var staticCacheName = 'site-static-'+WORKER_VER;
 var contentImgsCache = 'site-static-imgs-'+WORKER_VER;
 var allCaches = [
@@ -647,11 +654,15 @@ self.addEventListener('fetch', function(event){
           .then(storeReviewsInDB)
           .catch(err =>{
               console.log('Fetching reviews from database with id',id);
-              return IndexDBHelper.getRestaurantById(id).then(res => {
-                  //got one restaurant from database
+              return IndexDBHelper.getReviewsByRestaurantId(id).then(res => {
+                  //got reviews from local
+                  console.log('Got reviews from local',);
                   return new Response(JSON.stringify(res), {
                       headers: {'Content-Type': 'application/json'}
                   });
+              })
+              .catch(err => {
+                console.log('Error getting the local reviews',err);
               });
           })
       );
